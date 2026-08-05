@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "connection_status": {
+        "default": "mdi:api"
+      },
+      "ping_latency": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "button": {
+      "force_previous": {
+        "default": "mdi:skip-previous-circle"
+      },
+      "ping_client": {
+        "default": "mdi:network"
+      }
+    }
+  }
+}

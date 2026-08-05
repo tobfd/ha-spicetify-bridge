@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Spicetify Bridge Konfiguration",
+        "description": "Gib die Verbindungsdaten für den Spicetify WebSocket-Server ein.",
+        "data": {
+          "host": "Host / IP-Adresse",
+          "port": "Port",
+          "api_key": "API-Schlüssel / Token (Optional)",
+          "enable_ssl": "Verschlüsseltes WebSocket aktivieren (WSS / SSL)"
+        }
+      },
+      "ssl": {
+        "title": "SSL / WSS Zertifikate",
+        "description": "Spotify benötigt WSS (SSL-Verschlüsselung), wenn Home Assistant auf einem separaten Server läuft.",
+        "data": {
+          "certfile": "Pfad zum SSL-Zertifikat (.pem)",
+          "keyfile": "Pfad zum privaten Schlüssel (.pem)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum angegebenen Port fehlgeschlagen.",
+      "ssl_file_not_found": "Die angegebenen SSL-Zertifikatsdateien wurden auf dem Server nicht gefunden.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "abort": {
+      "already_configured": "Ein Server auf diesem Port ist bereits konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Spicetify Bridge Optionen",
+        "description": "Einstellungen für diese Spicetify Bridge-Instanz aktualisieren.",
+        "data": {
+          "api_key": "API-Schlüssel / Token (Optional)",
+          "enable_ssl": "Verschlüsseltes WebSocket aktivieren (WSS / SSL)",
+          "certfile": "Pfad zum SSL-Zertifikat (.pem)",
+          "keyfile": "Pfad zum privaten Schlüssel (.pem)"
+        }
+      }
+    },
+    "error": {
+      "ssl_file_not_found": "Die angegebenen SSL-Zertifikatsdateien wurden auf dem Server nicht gefunden."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "connection_status": {
+        "name": "Verbindungsstatus",
+        "state": {
+          "connected": "Verbunden",
+          "disconnected": "Getrennt"
+        }
+      },
+      "ping_latency": {
+        "name": "Ping-Latenz"
+      }
+    },
+    "button": {
+      "force_previous": {
+        "name": "Vorherigen Song erzwingen"
+      },
+      "toggle_heart": {
+        "name": "Lieblingssong umschalten"
+      },
+      "ping_client": {
+        "name": "Client Ping testen"
+      }
+    },
+    "switch": {
+      "liked_track": {
+        "name": "Lieblingssong"
+      }
+    }
+  }
+}

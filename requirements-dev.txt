@@ -1,0 +1,6 @@
+spicetify-websocket>=0.3.0,<0.4.0
+pytest>=9.0.0
+pytest-asyncio>=1.4.0
+pytest-homeassistant-custom-component>=0.13.0
+ruff>=0.16.0
+pre-commit>=4.0.0

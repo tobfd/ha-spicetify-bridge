@@ -1,0 +1,23 @@
+# Virtual Environment
+.venv
+
+# Python Cache & Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE & Editor Settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing & Linting Caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Home Assistant Local Testing Artifacts
+config/
