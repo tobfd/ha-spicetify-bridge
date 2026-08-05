@@ -38,6 +38,11 @@ async def test_media_player_commands(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    hub = mock_config_entry.runtime_data
+    hub.is_connected = True
+    hub._notify_connection_update()
+    await hass.async_block_till_done()
+
     entity_id = "media_player.spicetify_desktop_client_9090"
 
     # Test Play

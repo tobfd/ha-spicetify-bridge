@@ -25,11 +25,16 @@ async def test_button_press(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    hub = mock_config_entry.runtime_data
+    hub.is_connected = True
+    hub._notify_connection_update()
+    await hass.async_block_till_done()
+
     # Press Force Previous Button
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.spicetify_desktop_client_9090_force_previous"},
+        {ATTR_ENTITY_ID: "button.spicetify_desktop_client_9090_force_previous_track"},
         blocking=True,
     )
     mock_spotify_server.previous_song.assert_called_with(force=True)
