@@ -13,7 +13,7 @@ from custom_components.spicetify_bridge import async_setup_entry
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    _mock_spotify_server: AsyncMock,
+    mock_spotify_server: AsyncMock,
 ) -> None:
     """Test sensor states."""
     mock_config_entry.add_to_hass(hass)
