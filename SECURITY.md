@@ -7,7 +7,7 @@ We actively support the latest release of `ha-spicetify-bridge` with security pa
 | Version | Supported          |
 |---------|--------------------|
 | 0.1.x   | :white_check_mark: |
-| < 0.1   | :x:                |
+| < 0.1.0 | :x:                |
 
 ---
 

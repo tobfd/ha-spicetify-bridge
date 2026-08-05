@@ -29,6 +29,7 @@ async def test_liked_track_switch(
     hub = mock_config_entry.runtime_data
     hub.is_connected = True
     hub.player_state = MagicMock()
+    hub.player_state.is_hearted = False
     hub.player_state.track = MagicMock()
     hub._notify_connection_update()
     hub._notify_state_update()
