@@ -20,9 +20,10 @@ pytest_plugins = ["pytest_homeassistant_custom_component"]
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(
-    _enable_custom_integrations: None,
+    enable_custom_integrations: None,
 ) -> Generator[None, None, None]:
     """Enable custom integrations in Home Assistant test environment."""
+    _ = enable_custom_integrations
     yield
 
 
@@ -74,5 +75,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PORT: 9090,
             CONF_ENABLE_SSL: False,
         },
-        unique_id="spicetify_bridge_9090",
+        entry_id="spicetify_bridge_test_entry",
     )

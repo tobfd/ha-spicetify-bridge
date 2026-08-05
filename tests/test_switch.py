@@ -1,6 +1,6 @@
 """Test Spicetify Bridge switches."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -15,8 +15,6 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
-from custom_components.spicetify_bridge import async_setup_entry
-
 
 async def test_liked_track_switch(
     hass: HomeAssistant,
@@ -25,7 +23,16 @@ async def test_liked_track_switch(
 ) -> None:
     """Test liked track switch entity."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+    hub.is_connected = True
+    hub.player_state = MagicMock()
+    hub.player_state.is_hearted = False
+    hub.player_state.track = MagicMock()
+    hub._notify_connection_update()
+    hub._notify_state_update()
     await hass.async_block_till_done()
 
     entity_id = "switch.spicetify_desktop_client_9090_liked_track"

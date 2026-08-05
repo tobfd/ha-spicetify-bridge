@@ -7,17 +7,15 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
-from custom_components.spicetify_bridge import async_setup_entry
-
 
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    _mock_spotify_server: AsyncMock,
+    mock_spotify_server: AsyncMock,
 ) -> None:
     """Test sensor states."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     connection_state = hass.states.get(

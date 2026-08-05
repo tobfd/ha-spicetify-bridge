@@ -63,7 +63,6 @@ To use this integration, you need:
 
 <br/>
 
-> [!IMPORTANT]
 > **Why is WSS / SSL required?**
 > Spotify Desktop is built on Chromium and enforces strict security policies. If Home Assistant and Spotify run on **different devices** on your local network, Spotify blocks unencrypted (`ws://`) WebSocket connections. You **must** enable WSS (`wss://`) and use an SSL certificate.
 
