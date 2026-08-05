@@ -7,11 +7,6 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
-from custom_components.spicetify_bridge import (
-    async_setup_entry,
-    async_unload_entry,
-)
-
 
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
@@ -21,13 +16,13 @@ async def test_setup_and_unload_entry(
     """Test setting up and unloading a config entry."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_entry(hass, mock_config_entry)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.runtime_data is not None
     mock_spotify_server.start.assert_called_once()
 
-    assert await async_unload_entry(hass, mock_config_entry)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     mock_spotify_server.stop.assert_called_once()

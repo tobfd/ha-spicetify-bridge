@@ -14,8 +14,6 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
-from custom_components.spicetify_bridge import async_setup_entry
-
 
 async def test_button_press(
     hass: HomeAssistant,
@@ -24,7 +22,7 @@ async def test_button_press(
 ) -> None:
     """Test pressing button entities."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Press Force Previous Button

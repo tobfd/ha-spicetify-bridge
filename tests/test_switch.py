@@ -15,8 +15,6 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
 )
 
-from custom_components.spicetify_bridge import async_setup_entry
-
 
 async def test_liked_track_switch(
     hass: HomeAssistant,
@@ -25,7 +23,7 @@ async def test_liked_track_switch(
 ) -> None:
     """Test liked track switch entity."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "switch.spicetify_desktop_client_9090_liked_track"

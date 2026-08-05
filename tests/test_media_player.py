@@ -27,8 +27,6 @@ from pytest_homeassistant_custom_component.common import (
 )
 from spicetify import RepeatMode as SpicetifyRepeatMode
 
-from custom_components.spicetify_bridge import async_setup_entry
-
 
 async def test_media_player_commands(
     hass: HomeAssistant,
@@ -37,7 +35,7 @@ async def test_media_player_commands(
 ) -> None:
     """Test media player entity services."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = "media_player.spicetify_desktop_client_9090"
