@@ -1,8 +1,9 @@
-<img src="custom_components/spicetify_bridge/brand/logo.png" alt="Spicetify Bridge Logo" height="200"/>
+<img src="https://raw.githubusercontent.com/tobfd/ha-spicetify-bridge/master/custom_components/spicetify_bridge/brand/logo.png" alt="Spicetify Bridge Logo" height="200"/>
 
 [![HACS Badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge&color=039be5)](https://github.com/hacs/default)
-[![GitHub License](https://img.shields.io/github/license/tobfd/ha-spicetify-bridge?style=for-the-badge&color=039be5)](https://github.com/tobfd/ha-spicetify-bridge/blob/main/LICENSE)
-[![Home Assistant Minimum Version](https://img.shields.io/badge/Home%20Assistant-2024.4.0%2B-blue?style=for-the-badge&logo=homeassistant&logoColor=039be5)](https://www.home-assistant.io/)
+[![GitHub Release](https://img.shields.io/github/v/release/tobfd/ha-spicetify-bridge?style=for-the-badge&logo=github&color=039be5)](https://github.com/tobfd/ha-spicetify-bridge/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/tobfd/ha-spicetify-bridge?style=for-the-badge&color=039be5&logo=github)](https://github.com/tobfd/ha-spicetify-bridge/blob/main/LICENSE)
+[![Home Assistant Minimum Version](https://img.shields.io/badge/Home%20Assistant-2024.4.0%2B-blue?style=for-the-badge&logo=homeassistant&logoColor=white&color=039be5)](https://www.home-assistant.io/)
 
 A feature-rich Home Assistant custom component that provides local push-based real-time control over your **Spotify Desktop Client** via [Spicetify](https://spicetify.app/) and the [spicetify-connect-api](https://github.com/tobfd/spicetify-connect-api) extension.
 
