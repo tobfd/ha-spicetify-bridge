@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main", "master" ]
 
 permissions:
   contents: read
@@ -19,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
@@ -53,7 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        # Current Home Assistant releases require Python 3.14.
+        python-version: ["3.14"]
 
     steps:
       - uses: actions/checkout@v4
@@ -69,4 +69,4 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run Pytest
-        run: pytest
+        run: pytest --cov=custom_components.spicetify_bridge --cov-report=term-missing
