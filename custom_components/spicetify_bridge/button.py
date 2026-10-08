@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -80,7 +81,7 @@ class SpicetifyForcePreviousButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.hub.server.previous_song(force=True)
+        await self.hub.async_command(lambda server: server.previous_song(force=True))
 
 
 class SpicetifyPingButton(ButtonEntity):
@@ -126,4 +127,7 @@ class SpicetifyPingButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.hub.async_ping_client()
+        if await self.hub.async_ping_client() is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            )

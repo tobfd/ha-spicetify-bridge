@@ -3,12 +3,18 @@
     "step": {
       "user": {
         "title": "Spicetify Bridge Konfiguration",
-        "description": "Gib die Verbindungsdaten für den Spicetify WebSocket-Server ein.",
+        "description": "Home Assistant stellt den WebSocket-Server bereit, mit dem sich die spicetify-connect-api-Erweiterung in Spotify verbindet.",
         "data": {
           "host": "Host / IP-Adresse",
           "port": "Port",
           "api_key": "API-Schlüssel / Token (Optional)",
           "enable_ssl": "Verschlüsseltes WebSocket aktivieren (WSS / SSL)"
+        },
+        "data_description": {
+          "host": "Netzwerkschnittstelle, auf der der Server lauscht. Mit 0.0.0.0 sind Verbindungen von anderen Geräten im Netzwerk möglich.",
+          "port": "Port, auf dem der Server lauscht. Derselbe Port muss in der Server-URL der Erweiterung stehen.",
+          "api_key": "Gemeinsames Geheimnis, das mit dem API-Schlüssel in den Einstellungen der Erweiterung übereinstimmen muss. Verwende einen langen, zufälligen Wert.",
+          "enable_ssl": "Erforderlich, wenn Spotify auf einem anderen Gerät als Home Assistant läuft, da Spotify unverschlüsselte WebSocket-Verbindungen zu anderen Geräten blockiert."
         }
       },
       "ssl": {
@@ -17,16 +23,19 @@
         "data": {
           "certfile": "Pfad zum SSL-Zertifikat (.pem)",
           "keyfile": "Pfad zum privaten Schlüssel (.pem)"
+        },
+        "data_description": {
+          "certfile": "Zertifikatsdatei auf dem Home-Assistant-Host, zum Beispiel /ssl/cert.pem.",
+          "keyfile": "Private Schlüsseldatei auf dem Home-Assistant-Host, zum Beispiel /ssl/key.pem."
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zum angegebenen Port fehlgeschlagen.",
-      "ssl_file_not_found": "Die angegebenen SSL-Zertifikatsdateien wurden auf dem Server nicht gefunden.",
-      "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+      "cannot_connect": "Der angegebene Host und Port konnten nicht belegt werden. Wird der Port bereits von einem anderen Dienst verwendet?",
+      "ssl_file_not_found": "Die angegebenen SSL-Zertifikatsdateien wurden auf dem Server nicht gefunden."
     },
     "abort": {
-      "already_configured": "Ein Server auf diesem Port ist bereits konfiguriert."
+      "already_configured": "Ein Server auf diesem Host und Port ist bereits konfiguriert."
     }
   },
   "options": {
@@ -39,6 +48,12 @@
           "enable_ssl": "Verschlüsseltes WebSocket aktivieren (WSS / SSL)",
           "certfile": "Pfad zum SSL-Zertifikat (.pem)",
           "keyfile": "Pfad zum privaten Schlüssel (.pem)"
+        },
+        "data_description": {
+          "api_key": "Gemeinsames Geheimnis, das mit dem API-Schlüssel in den Einstellungen der Erweiterung übereinstimmen muss. Verwende einen langen, zufälligen Wert.",
+          "enable_ssl": "Erforderlich, wenn Spotify auf einem anderen Gerät als Home Assistant läuft.",
+          "certfile": "Zertifikatsdatei auf dem Home-Assistant-Host, zum Beispiel /ssl/cert.pem.",
+          "keyfile": "Private Schlüsseldatei auf dem Home-Assistant-Host, zum Beispiel /ssl/key.pem."
         }
       }
     },
@@ -63,9 +78,6 @@
       "force_previous": {
         "name": "Vorherigen Song erzwingen"
       },
-      "toggle_heart": {
-        "name": "Lieblingssong umschalten"
-      },
       "ping_client": {
         "name": "Client Ping testen"
       }
@@ -74,6 +86,26 @@
       "liked_track": {
         "name": "Lieblingssong"
       }
+    }
+  },
+  "exceptions": {
+    "not_connected": {
+      "message": "Der Spotify-Client ist nicht verbunden. Prüfe, ob Spotify läuft und die spicetify-connect-api-Erweiterung Home Assistant erreichen kann."
+    },
+    "request_timeout": {
+      "message": "Der Spotify-Client hat auf den Befehl \"{command}\" nicht rechtzeitig geantwortet."
+    },
+    "unauthorized": {
+      "message": "Der Spotify-Client hat den Befehl abgelehnt. Prüfe, ob der API-Schlüssel in Home Assistant und in den Einstellungen der Erweiterung übereinstimmt."
+    },
+    "command_failed": {
+      "message": "Der Spotify-Client konnte den Befehl nicht ausführen: {error}"
+    },
+    "ssl_load_failed": {
+      "message": "Das SSL-Zertifikat \"{certfile}\" oder der Schlüssel \"{keyfile}\" konnte nicht geladen werden: {error}"
+    },
+    "server_start_failed": {
+      "message": "Der WebSocket-Server konnte auf {host}:{port} nicht gestartet werden: {error}"
     }
   }
 }

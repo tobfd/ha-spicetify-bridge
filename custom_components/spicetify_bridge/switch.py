@@ -102,8 +102,8 @@ class SpicetifyLikedTrackSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Heart/Like the current track."""
-        await self.hub.server.set_heart(True)
+        await self.hub.async_command(lambda server: server.set_heart(True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Unlike/Remove heart from the current track."""
-        await self.hub.server.set_heart(False)
+        await self.hub.async_command(lambda server: server.set_heart(False))
