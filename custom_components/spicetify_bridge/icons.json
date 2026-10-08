@@ -2,7 +2,10 @@
   "entity": {
     "sensor": {
       "connection_status": {
-        "default": "mdi:api"
+        "default": "mdi:api",
+        "state": {
+          "disconnected": "mdi:api-off"
+        }
       },
       "ping_latency": {
         "default": "mdi:speedometer"
@@ -14,6 +17,14 @@
       },
       "ping_client": {
         "default": "mdi:network"
+      }
+    },
+    "switch": {
+      "liked_track": {
+        "default": "mdi:heart-outline",
+        "state": {
+          "on": "mdi:heart"
+        }
       }
     }
   }

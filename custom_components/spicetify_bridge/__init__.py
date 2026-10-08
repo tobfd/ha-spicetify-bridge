@@ -23,11 +23,9 @@ async def async_setup_entry(
     # Store hub in runtime_data (Modern HA Standard)
     entry.runtime_data = bridge_hub
 
-    # Forward entry setup to platforms
+    # Forward entry setup to platforms. Option changes reload the entry
+    # automatically (OptionsFlowWithReload).
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register update listener for options flow changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
 
@@ -45,11 +43,3 @@ async def async_unload_entry(
         await bridge_hub.async_stop()
 
     return unload_ok
-
-
-async def async_update_options(
-    hass: HomeAssistant, entry: SpicetifyBridgeConfigEntry
-) -> None:
-    """Reload integration when options change."""
-    LOGGER.debug("Options updated, reloading Spicetify Bridge entry")
-    await hass.config_entries.async_reload(entry.entry_id)

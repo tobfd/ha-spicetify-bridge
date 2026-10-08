@@ -13,24 +13,19 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player import (
     RepeatMode as HARepeatMode,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from spicetify import RepeatMode as SpicetifyRepeatMode
 
-from .const import (
-    CONF_PORT,
-    DEFAULT_PORT,
-    DOMAIN,
-    SIGNAL_SPICETIFY_CONNECTION_UPDATE,
-    SIGNAL_SPICETIFY_STATE_UPDATE,
-)
+from .entity import SpicetifyEntity
 
 if TYPE_CHECKING:
     from . import SpicetifyBridgeConfigEntry
     from .hub import SpicetifyBridgeHub
+
+# Commands go to a single Spotify client, so send them one at a time.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -43,64 +38,18 @@ async def async_setup_entry(
     async_add_entities([SpicetifyMediaPlayer(entry, hub)])
 
 
-class SpicetifyMediaPlayer(MediaPlayerEntity):
+class SpicetifyMediaPlayer(SpicetifyEntity, MediaPlayerEntity):
     """Representation of a Spicetify Desktop Client media player."""
 
-    _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = False
+    _attr_media_content_type = MediaType.MUSIC
+    _listens_to_player_state = True
 
     def __init__(
         self, entry: SpicetifyBridgeConfigEntry, hub: SpicetifyBridgeHub
     ) -> None:
         """Initialize the media player entity."""
-        self.entry = entry
-        self.hub = hub
-
-        port = entry.data.get(CONF_PORT, DEFAULT_PORT)
-        self._attr_unique_id = f"spicetify_bridge_{entry.entry_id}_media_player"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Spicetify Desktop Client ({port})",
-            manufacturer="Spicetify",
-            model="Spicetify Connect API",
-        )
-        self._is_muted: bool = False
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_SPICETIFY_STATE_UPDATE,
-                self._handle_state_update,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_SPICETIFY_CONNECTION_UPDATE,
-                self._handle_connection_update,
-            )
-        )
-
-    @callback
-    def _handle_state_update(self) -> None:
-        """Handle state update signal from hub."""
-        state = self.hub.player_state
-        if state and getattr(state, "is_muted", None) is not None:
-            self._is_muted = state.is_muted
-        self.async_write_ha_state()
-
-    @callback
-    def _handle_connection_update(self) -> None:
-        """Handle connection update signal from hub."""
-        self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return True if the Spicetify WebSocket client is connected."""
-        return self.hub.is_connected
+        super().__init__(entry, hub, "media_player")
 
     @property
     def state(self) -> MediaPlayerState:
@@ -163,14 +112,7 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Return True if volume is muted."""
         state = self.hub.player_state
-        if state and getattr(state, "is_muted", None) is not None:
-            return state.is_muted
-        return self._is_muted
-
-    @property
-    def media_content_type(self) -> MediaType:
-        """Content type of current playing media."""
-        return MediaType.MUSIC
+        return state.is_muted if state else None
 
     @property
     def media_content_id(self) -> str | None:
@@ -208,9 +150,7 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
         track = self.hub.current_track
         if not track:
             return None
-        if hasattr(track, "images") and track.images and track.images.large:
-            return track.images.large
-        return track.image_url
+        return track.images.large or track.image_url
 
     @property
     def media_duration(self) -> int | None:
@@ -295,10 +235,6 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
         """Send pause command."""
         await self.hub.async_command(lambda server: server.pause())
 
-    async def async_media_stop(self) -> None:
-        """Send stop command (pauses playback)."""
-        await self.hub.async_command(lambda server: server.pause())
-
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.hub.async_command(lambda server: server.next_song())
@@ -315,8 +251,10 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute playback."""
         await self.hub.async_command(lambda server: server.set_mute(mute))
-        self._is_muted = mute
-        self.async_write_ha_state()
+        # The extension sends no event for mute changes, so update optimistically.
+        if self.hub.player_state is not None:
+            self.hub.player_state.is_muted = mute
+            self.async_write_ha_state()
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in seconds."""
