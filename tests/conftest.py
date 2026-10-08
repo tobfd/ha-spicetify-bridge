@@ -62,14 +62,20 @@ def mock_spotify_server() -> Generator[AsyncMock, None, None]:
         mock_instance.toggle_heart = AsyncMock(return_value=True)
         mock_instance.play_uri = AsyncMock(return_value="spotify:track:test")
 
-        # Mock Decorator Registration Handlers
-        def dummy_decorator(func):
-            return func
+        # Record decorator registrations so tests can trigger the callbacks.
+        mock_instance.callbacks = {}
 
-        mock_instance.on_state_changed = dummy_decorator
-        mock_instance.on_ping = dummy_decorator
-        mock_instance.on_heart_changed = dummy_decorator
+        def recorder(name):
+            def decorator(func):
+                mock_instance.callbacks[name] = func
+                return func
 
+            return decorator
+
+        for name in ("on_state_changed", "on_ping", "on_connect", "on_disconnect"):
+            setattr(mock_instance, name, recorder(name))
+
+        mock_instance.server_cls = mock_server_cls
         yield mock_instance
 
 

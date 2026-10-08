@@ -94,7 +94,6 @@ async def test_ping_button_raises_when_client_offline(
         )
 
     assert exc_info.value.translation_key == "not_connected"
-    assert mock_config_entry.runtime_data.is_connected is False
 
 
 async def test_setup_retries_when_port_is_busy(

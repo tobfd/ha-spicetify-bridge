@@ -73,7 +73,7 @@ class SpicetifyLatencySensor(SpicetifyEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 1
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    # Updated every heartbeat; only useful for troubleshooting.
+    # Refreshed every minute; only useful for troubleshooting.
     _attr_entity_registry_enabled_default = False
 
     def __init__(

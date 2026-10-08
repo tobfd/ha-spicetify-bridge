@@ -24,12 +24,14 @@ CONF_API_KEY: Final = "api_key"
 CONF_ENABLE_SSL: Final = "enable_ssl"
 CONF_CERTFILE: Final = "certfile"
 CONF_KEYFILE: Final = "keyfile"
+CONF_RESTRICT_ORIGIN: Final = "restrict_origin"
 
 DEFAULT_HOST: Final = "0.0.0.0"
 DEFAULT_PORT: Final = 9090
 DEFAULT_ENABLE_SSL: Final = True
 DEFAULT_CERTFILE: Final = "/ssl/cert.pem"
 DEFAULT_KEYFILE: Final = "/ssl/key.pem"
+DEFAULT_RESTRICT_ORIGIN: Final = True
 
 # Dispatcher signals
 SIGNAL_SPICETIFY_STATE_UPDATE: Final = "spicetify_bridge_state_update"

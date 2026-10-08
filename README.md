@@ -58,6 +58,7 @@ To use this integration, you need:
    - **Port**: `9090` (default).
    - **API Key**: *(Optional)* Secret token matching your Spicetify extension configuration.
    - **Enable WSS / SSL**: Check this box if Home Assistant and Spotify run on different computers.
+4. *(Optional)* In the integration options, **Only accept connections from Spotify Desktop** is enabled by default. It rejects WebSocket connections from other origins (for example websites open in a browser). Disable it only if you use a different client.
 
 <details>
 <summary><b>🔒 WSS / SSL & Certificate Setup Guide (Click to Expand)</b></summary>

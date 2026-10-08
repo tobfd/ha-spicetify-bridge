@@ -47,13 +47,15 @@
           "api_key": "API Key / Secret Token (Optional)",
           "enable_ssl": "Enable Secure WebSockets (WSS / SSL)",
           "certfile": "Path to SSL Certificate (.pem)",
-          "keyfile": "Path to Private Key (.pem)"
+          "keyfile": "Path to Private Key (.pem)",
+          "restrict_origin": "Only accept connections from Spotify Desktop"
         },
         "data_description": {
           "api_key": "Shared secret that must match the API key in the extension settings. Use a long random value.",
           "enable_ssl": "Required when Spotify runs on a different device than Home Assistant.",
           "certfile": "Certificate file on the Home Assistant host, for example /ssl/cert.pem.",
-          "keyfile": "Private key file on the Home Assistant host, for example /ssl/key.pem."
+          "keyfile": "Private key file on the Home Assistant host, for example /ssl/key.pem.",
+          "restrict_origin": "Rejects WebSocket connections whose origin is not the Spotify desktop client, so other websites in a browser cannot connect. Disable only if you use a different client."
         }
       }
     },
