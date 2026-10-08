@@ -28,8 +28,17 @@ def auto_enable_custom_integrations(
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Prevent config flow tests from setting up the entry (and binding a real port)."""
+    with patch(
+        "custom_components.spicetify_bridge.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_spotify_server() -> Generator[AsyncMock, None, None]:
-    """Mock the SpotifyServer instance from spicetify-websocket (v0.3.0)."""
+    """Mock the SpotifyServer instance from spicetify-websocket."""
     with patch(
         "custom_components.spicetify_bridge.hub.SpotifyServer"
     ) as mock_server_cls:

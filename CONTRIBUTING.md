@@ -9,7 +9,7 @@ Thank you for considering contributing to **ha-spicetify-bridge**! We welcome bu
 ### 1. Fork & Setup Development Environment
 
 1. **Fork** this repository on GitHub.
-2. Clone your fork locally and set up a virtual environment (Python 3.12+ recommended):
+2. Clone your fork locally and set up a virtual environment (Python 3.14+, matching current Home Assistant releases):
    ```bash
    git clone https://github.com/tobfd/ha-spicetify-bridge.git
    cd ha-spicetify-bridge
