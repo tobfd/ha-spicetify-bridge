@@ -105,9 +105,14 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Return the current playback state of the player."""
-        if not self.hub.is_connected:
-            return MediaPlayerState.OFF
-        if self.hub.player_state and self.hub.player_state.is_playing:
+        state = self.hub.player_state
+        if state is None or state.track is None:
+            return MediaPlayerState.IDLE
+        # Spotify buffers briefly after every track change and seek. BUFFERING is
+        # not used: the frontend hides the transport controls and stops the
+        # progress bar in that state, and the extension may not report the end
+        # of buffering. The flag stays available as the is_buffering attribute.
+        if state.is_playing:
             return MediaPlayerState.PLAYING
         return MediaPlayerState.PAUSED
 
@@ -152,6 +157,8 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0.0 to 1.0)."""
+        if self.hub.volume_level is None:
+            return None
         return self.hub.volume_level / 100.0
 
     @property
@@ -166,6 +173,14 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
         return MediaType.MUSIC
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Spotify URI of the current track."""
+        track = self.hub.current_track
+        if track is None or not track.uri:
+            return None
+        return track.uri
 
     @property
     def media_title(self) -> str | None:
@@ -219,9 +234,7 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> dt_util.dt.datetime | None:
         """When position was last updated."""
-        if self.state == MediaPlayerState.PLAYING and self.hub.position_updated_at:
-            return self.hub.position_updated_at
-        return None
+        return self.hub.position_updated_at
 
     @property
     def is_favorite(self) -> bool | None:

@@ -80,7 +80,7 @@ class SpicetifyBridgeHub:
 
         # State tracking for Home Assistant entities
         self.player_state: PlayerState | None = None
-        self.volume_level: float = 100.0
+        self.volume_level: float | None = None
         self.is_connected: bool = False
         self.last_ping_latency: float | None = None
         self.last_heartbeat: datetime | None = None
@@ -113,25 +113,14 @@ class SpicetifyBridgeHub:
         self._notify_connection_update()
 
     def _update_player_state(self, state: PlayerState) -> None:
-        """Central update handler utilizing state.timestamp for precision synchronization."""
-        now = dt_util.utcnow()
+        """Store a new player state snapshot and notify entities."""
         self.player_state = state
-
-        if isinstance(state.volume, (float, int)):
-            self.volume_level = (
-                state.volume * 100.0 if state.volume <= 1.0 else float(state.volume)
-            )
-
+        # The library already reports volume as a percentage (0-100).
+        self.volume_level = float(state.volume)
         self.position_ms = state.position_ms or 0
-
-        if state.is_playing:
-            event_time: datetime = (
-                state.timestamp if isinstance(state.timestamp, datetime) else now
-            )
-            # Cap event_time to 'now' to prevent future-timestamp drift if PC clock is ahead
-            self.position_updated_at = min(event_time, now)
-        else:
-            self.position_updated_at = None
+        # Use the receive time, not the PC clock (state.timestamp): Home Assistant
+        # requires utcnow() here, and the PC clock may drift from Home Assistant.
+        self.position_updated_at = dt_util.utcnow()
 
         self._set_connected(True)
         self._notify_state_update()
@@ -237,6 +226,7 @@ class SpicetifyBridgeHub:
             self._server = None
 
         self.player_state = None
+        self.volume_level = None
         self.position_ms = None
         self.position_updated_at = None
         self.is_connected = False
