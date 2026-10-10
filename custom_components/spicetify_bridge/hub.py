@@ -3,15 +3,27 @@
 from __future__ import annotations
 
 import ssl
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 from spicetify import PlayerState, SpotifyServer
-from spicetify.exceptions import SpicetifyError
+from spicetify.exceptions import (
+    NotConnectedError,
+    RequestTimeoutError,
+    SpicetifyError,
+    UnauthorizedError,
+)
+from websockets.exceptions import ConnectionClosed
 
 from .const import (
     CONF_API_KEY,
@@ -25,6 +37,7 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_KEYFILE,
     DEFAULT_PORT,
+    DOMAIN,
     LOGGER,
     SIGNAL_SPICETIFY_CONNECTION_UPDATE,
     SIGNAL_SPICETIFY_STATE_UPDATE,
@@ -34,6 +47,8 @@ if TYPE_CHECKING:
     from . import SpicetifyBridgeConfigEntry
 
 HEARTBEAT_INTERVAL = timedelta(seconds=15)
+
+_T = TypeVar("_T")
 
 
 def _create_ssl_context(certfile: str, keyfile: str) -> ssl.SSLContext:
@@ -86,6 +101,17 @@ class SpicetifyBridgeHub:
         """Return current track info from player state."""
         return self.player_state.track if self.player_state else None
 
+    def _set_connected(self, connected: bool) -> None:
+        """Update the connection state, logging and notifying only on changes."""
+        if connected == self.is_connected:
+            return
+        self.is_connected = connected
+        if connected:
+            LOGGER.info("Spicetify client connected on port %s", self.port)
+        else:
+            LOGGER.info("Spicetify client on port %s is unavailable", self.port)
+        self._notify_connection_update()
+
     def _update_player_state(self, state: PlayerState) -> None:
         """Central update handler utilizing state.timestamp for precision synchronization."""
         now = dt_util.utcnow()
@@ -107,10 +133,7 @@ class SpicetifyBridgeHub:
         else:
             self.position_updated_at = None
 
-        if not self.is_connected:
-            self.is_connected = True
-            self._notify_connection_update()
-
+        self._set_connected(True)
         self._notify_state_update()
 
     def _register_event_handlers(self) -> None:
@@ -131,9 +154,7 @@ class SpicetifyBridgeHub:
         def handle_ping(ping_time: datetime) -> None:
             LOGGER.debug("Received Heartbeat Ping at: %s", ping_time)
             self.last_heartbeat = ping_time
-            if not self.is_connected:
-                self.is_connected = True
-                self._notify_connection_update()
+            self._set_connected(True)
 
     async def _async_heartbeat_check(self, _now: datetime) -> None:
         """Periodically ping client to detect ungraceful disconnections."""
@@ -149,7 +170,14 @@ class SpicetifyBridgeHub:
         async_dispatcher_send(self.hass, SIGNAL_SPICETIFY_CONNECTION_UPDATE)
 
     async def async_start(self) -> None:
-        """Start the WebSocket server asynchronously."""
+        """Start the WebSocket server asynchronously.
+
+        Raises:
+            ConfigEntryError: If the SSL certificate or key cannot be loaded. The
+                user has to fix the files, so retrying would not help.
+            ConfigEntryNotReady: If the server cannot be started, for example
+                because the port is still in use. Home Assistant retries later.
+        """
         LOGGER.info("Starting Spicetify Bridge WebSocket server instance")
 
         server_kwargs: dict[str, Any] = {
@@ -159,15 +187,38 @@ class SpicetifyBridgeHub:
         }
 
         if self.enable_ssl:
-            ssl_ctx = await self.hass.async_add_executor_job(
-                _create_ssl_context, self.certfile, self.keyfile
-            )
+            try:
+                ssl_ctx = await self.hass.async_add_executor_job(
+                    _create_ssl_context, self.certfile, self.keyfile
+                )
+            except (OSError, ssl.SSLError) as err:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="ssl_load_failed",
+                    translation_placeholders={
+                        "certfile": self.certfile,
+                        "keyfile": self.keyfile,
+                        "error": str(err),
+                    },
+                ) from err
             server_kwargs["ssl_context"] = ssl_ctx
 
         server_instance = SpotifyServer(**server_kwargs)
         self._server = server_instance
         self._register_event_handlers()
-        await server_instance.start()
+        try:
+            await server_instance.start()
+        except OSError as err:
+            self._server = None
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="server_start_failed",
+                translation_placeholders={
+                    "host": self.host,
+                    "port": str(self.port),
+                    "error": str(err),
+                },
+            ) from err
 
         self._unsub_heartbeat = async_track_time_interval(
             self.hass, self._async_heartbeat_check, HEARTBEAT_INTERVAL
@@ -191,27 +242,68 @@ class SpicetifyBridgeHub:
         self.is_connected = False
         self._notify_connection_update()
 
+    async def async_command(
+        self, command: Callable[[SpotifyServer], Awaitable[_T]]
+    ) -> _T:
+        """Run a command against the Spicetify client and translate failures.
+
+        Service actions must raise ``HomeAssistantError`` on failure so the
+        user sees a readable, translated message instead of a stack trace.
+
+        Args:
+            command: Callable receiving the server and returning an awaitable.
+
+        Returns:
+            The result of the command.
+
+        Raises:
+            HomeAssistantError: If the client is offline, does not respond,
+                rejects the API key or reports an error.
+        """
+        if self._server is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            )
+        try:
+            return await command(self._server)
+        except (NotConnectedError, ConnectionClosed) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            ) from err
+        except RequestTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_timeout",
+                translation_placeholders={"command": err.command},
+            ) from err
+        except UnauthorizedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unauthorized"
+            ) from err
+        except SpicetifyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
     async def async_ping_client(self) -> float | None:
         """Trigger a manual ping request to the Spicetify client."""
         if self._server is None:
             return None
         try:
             latency = await self.server.ping()
-            self.last_ping_latency = latency
-            self.is_connected = True
-            self._notify_connection_update()
-            return latency
-        except (SpicetifyError, OSError, TimeoutError) as err:
-            LOGGER.debug(
-                "Ping request to Spicetify client failed (client offline): %s", err
-            )
-            if self.is_connected:
-                self.is_connected = False
-                self._notify_connection_update()
+        except (SpicetifyError, ConnectionClosed, OSError, TimeoutError) as err:
+            LOGGER.debug("Ping request to Spicetify client failed: %s", err)
+            self._set_connected(False)
             return None
-        except Exception as err:  # noqa: BLE001
-            LOGGER.error("Unexpected error during ping request: %s", err)
-            if self.is_connected:
-                self.is_connected = False
-                self._notify_connection_update()
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error during ping request")
+            self._set_connected(False)
             return None
+
+        self.last_ping_latency = latency
+        self._set_connected(True)
+        # The latency sensor listens to connection updates.
+        self._notify_connection_update()
+        return latency

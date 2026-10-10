@@ -3,12 +3,18 @@
     "step": {
       "user": {
         "title": "Spicetify Bridge Configuration",
-        "description": "Enter the connection details for the Spicetify WebSocket Server.",
+        "description": "Home Assistant runs the WebSocket server that the spicetify-connect-api extension in Spotify connects to.",
         "data": {
           "host": "Host / IP Address",
           "port": "Port",
           "api_key": "API Key / Secret Token (Optional)",
           "enable_ssl": "Enable Secure WebSockets (WSS / SSL)"
+        },
+        "data_description": {
+          "host": "Network interface the server listens on. Use 0.0.0.0 to accept connections from other devices in your network.",
+          "port": "Port the server listens on. Use the same port in the extension's server URL.",
+          "api_key": "Shared secret that must match the API key in the extension settings. Use a long random value.",
+          "enable_ssl": "Required when Spotify runs on a different device than Home Assistant, because Spotify blocks unencrypted remote WebSocket connections."
         }
       },
       "ssl": {
@@ -17,16 +23,19 @@
         "data": {
           "certfile": "Path to SSL Certificate (.pem)",
           "keyfile": "Path to Private Key (.pem)"
+        },
+        "data_description": {
+          "certfile": "Certificate file on the Home Assistant host, for example /ssl/cert.pem.",
+          "keyfile": "Private key file on the Home Assistant host, for example /ssl/key.pem."
         }
       }
     },
     "error": {
-      "cannot_connect": "Could not bind to or reach the specified port.",
-      "ssl_file_not_found": "The specified SSL certificate files were not found on the server.",
-      "unknown": "An unexpected error occurred."
+      "cannot_connect": "Could not bind to the specified host and port. Is another service using it?",
+      "ssl_file_not_found": "The specified SSL certificate files were not found on the server."
     },
     "abort": {
-      "already_configured": "A server on this port is already configured."
+      "already_configured": "A server on this host and port is already configured."
     }
   },
   "options": {
@@ -39,6 +48,12 @@
           "enable_ssl": "Enable Secure WebSockets (WSS / SSL)",
           "certfile": "Path to SSL Certificate (.pem)",
           "keyfile": "Path to Private Key (.pem)"
+        },
+        "data_description": {
+          "api_key": "Shared secret that must match the API key in the extension settings. Use a long random value.",
+          "enable_ssl": "Required when Spotify runs on a different device than Home Assistant.",
+          "certfile": "Certificate file on the Home Assistant host, for example /ssl/cert.pem.",
+          "keyfile": "Private key file on the Home Assistant host, for example /ssl/key.pem."
         }
       }
     },
@@ -63,9 +78,6 @@
       "force_previous": {
         "name": "Force previous track"
       },
-      "toggle_heart": {
-        "name": "Toggle liked status"
-      },
       "ping_client": {
         "name": "Ping client"
       }
@@ -74,6 +86,26 @@
       "liked_track": {
         "name": "Liked track"
       }
+    }
+  },
+  "exceptions": {
+    "not_connected": {
+      "message": "The Spotify client is not connected. Make sure Spotify is running and the spicetify-connect-api extension can reach Home Assistant."
+    },
+    "request_timeout": {
+      "message": "The Spotify client did not respond to the command \"{command}\" in time."
+    },
+    "unauthorized": {
+      "message": "The Spotify client rejected the command. Check that the API key in Home Assistant and in the extension settings match."
+    },
+    "command_failed": {
+      "message": "The Spotify client could not run the command: {error}"
+    },
+    "ssl_load_failed": {
+      "message": "Could not load the SSL certificate \"{certfile}\" or key \"{keyfile}\": {error}"
+    },
+    "server_start_failed": {
+      "message": "Could not start the WebSocket server on {host}:{port}: {error}"
     }
   }
 }

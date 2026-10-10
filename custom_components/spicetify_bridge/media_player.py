@@ -278,43 +278,43 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
     # Media Control Commands
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.hub.server.play()
+        await self.hub.async_command(lambda server: server.play())
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.hub.server.pause()
+        await self.hub.async_command(lambda server: server.pause())
 
     async def async_media_stop(self) -> None:
         """Send stop command (pauses playback)."""
-        await self.hub.server.pause()
+        await self.hub.async_command(lambda server: server.pause())
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self.hub.server.next_song()
+        await self.hub.async_command(lambda server: server.next_song())
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self.hub.server.previous_song(force=False)
+        await self.hub.async_command(lambda server: server.previous_song(force=False))
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (0.0 to 1.0)."""
         percent = volume * 100.0
-        await self.hub.server.set_volume(percent)
+        await self.hub.async_command(lambda server: server.set_volume(percent))
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute playback."""
-        await self.hub.server.set_mute(mute)
+        await self.hub.async_command(lambda server: server.set_mute(mute))
         self._is_muted = mute
         self.async_write_ha_state()
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in seconds."""
         position_ms = position * 1000.0
-        await self.hub.server.seek(position_ms)
+        await self.hub.async_command(lambda server: server.seek(position_ms))
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
-        await self.hub.server.set_shuffle(shuffle)
+        await self.hub.async_command(lambda server: server.set_shuffle(shuffle))
 
     async def async_set_repeat(self, repeat: HARepeatMode) -> None:
         """Set repeat mode."""
@@ -324,14 +324,14 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
             mode = SpicetifyRepeatMode.CONTEXT
         else:
             mode = SpicetifyRepeatMode.OFF
-        await self.hub.server.set_repeat(mode)
+        await self.hub.async_command(lambda server: server.set_repeat(mode))
 
     async def async_set_favorite(self, favorite: bool) -> None:
         """Like or unlike the currently playing track."""
-        await self.hub.server.set_heart(favorite)
+        await self.hub.async_command(lambda server: server.set_heart(favorite))
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media via Spotify URI or URL."""
-        await self.hub.server.play_uri(media_id)
+        await self.hub.async_command(lambda server: server.play_uri(media_id))
