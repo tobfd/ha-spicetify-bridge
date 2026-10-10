@@ -108,8 +108,10 @@ class SpicetifyMediaPlayer(MediaPlayerEntity):
         state = self.hub.player_state
         if state is None or state.track is None:
             return MediaPlayerState.IDLE
-        if state.is_buffering:
-            return MediaPlayerState.BUFFERING
+        # Spotify buffers briefly after every track change and seek. BUFFERING is
+        # not used: the frontend hides the transport controls and stops the
+        # progress bar in that state, and the extension may not report the end
+        # of buffering. The flag stays available as the is_buffering attribute.
         if state.is_playing:
             return MediaPlayerState.PLAYING
         return MediaPlayerState.PAUSED

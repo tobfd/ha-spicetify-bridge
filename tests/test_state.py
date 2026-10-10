@@ -94,15 +94,25 @@ async def test_media_states(hass: HomeAssistant, hub) -> None:
     await _push(hass, hub, _state())
     assert hass.states.get(MEDIA_PLAYER).state == MediaPlayerState.PLAYING
 
-    buffering = _state()
-    buffering.is_buffering = True
-    await _push(hass, hub, buffering)
-    assert hass.states.get(MEDIA_PLAYER).state == MediaPlayerState.BUFFERING
+    paused = _state(isPlaying=False)
+    await _push(hass, hub, paused)
+    assert hass.states.get(MEDIA_PLAYER).state == MediaPlayerState.PAUSED
 
     idle = _state()
     idle.track = None
     await _push(hass, hub, idle)
     assert hass.states.get(MEDIA_PLAYER).state == MediaPlayerState.IDLE
+
+
+async def test_buffering_keeps_playing_state(hass: HomeAssistant, hub) -> None:
+    """Short buffering after a track change must not hide the media controls."""
+    buffering = _state()
+    buffering.is_buffering = True
+    await _push(hass, hub, buffering)
+
+    state = hass.states.get(MEDIA_PLAYER)
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["is_buffering"] is True
 
 
 async def test_media_content_id_is_track_uri(hass: HomeAssistant, hub) -> None:
