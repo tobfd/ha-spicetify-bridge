@@ -62,6 +62,10 @@ def mock_spotify_server() -> Generator[AsyncMock, None, None]:
         mock_instance.toggle_heart = AsyncMock(return_value=True)
         mock_instance.play_uri = AsyncMock(return_value="spotify:track:test")
 
+        # Plain attributes of the real server.
+        mock_instance.client_version = None
+        mock_instance.client_protocol_version = None
+
         # Record decorator registrations so tests can trigger the callbacks.
         mock_instance.callbacks = {}
 

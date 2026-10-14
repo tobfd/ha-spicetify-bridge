@@ -48,6 +48,8 @@ Run the test suite locally using `pytest` (only available on Linux in other case
 pytest
 ```
 
+Most tests replace spicetify-websocket with a mock. `tests/test_real_library.py` instead starts the real library server on a free local port and connects a client that speaks the extension's [protocol](https://github.com/tobfd/spicetify-connect-api/blob/master/PROTOCOL.md), so changes in the library or the protocol that break the integration show up here. The end-to-end tests of the real extension against the library live in [spicetify-websocket](https://github.com/tobfd/spicetify-websocket).
+
 ---
 
 ## 📥 Submitting a Pull Request

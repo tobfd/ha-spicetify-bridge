@@ -27,7 +27,7 @@ To use this integration, you need:
 
 1. **Spotify Desktop Client** installed on your PC or server.
 2. **[Spicetify CLI](https://spicetify.app/)** installed.
-3. The **[spicetify-connect-api](https://github.com/tobfd/spicetify-connect-api)** extension (`v0.3.0` or higher) enabled in Spicetify.
+3. The **[spicetify-connect-api](https://github.com/tobfd/spicetify-connect-api)** extension enabled in Spicetify (`v0.4.0` or higher recommended; `v0.3.x` works without mute, buffering updates and error codes).
 
 ---
 

@@ -13,6 +13,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -152,10 +153,22 @@ class SpicetifyBridgeHub:
         @server.on_connect
         def handle_connect() -> None:
             self._set_connected(True)
+            self._update_device_version(server.client_version)
 
         @server.on_disconnect
         def handle_disconnect() -> None:
             self._set_connected(False)
+
+    def _update_device_version(self, version: str | None) -> None:
+        """Show the connected extension's version on the device page."""
+        if not version:
+            return
+        registry = dr.async_get(self.hass)
+        # The entry has exactly one device. (Looked up by config entry because
+        # async_get_device is deprecated and its replacement needs HA 2026.10.)
+        for device in dr.async_entries_for_config_entry(registry, self.entry.entry_id):
+            if device.sw_version != version:
+                registry.async_update_device(device.id, sw_version=version)
 
     async def _async_latency_check(self, _now: datetime) -> None:
         """Periodically refresh the latency sensor while connected."""
