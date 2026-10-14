@@ -150,12 +150,12 @@ class SpicetifyBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    ) -> SpicetifyBridgeOptionsFlow:
         """Create the options flow handler."""
         return SpicetifyBridgeOptionsFlow()
 
 
-class SpicetifyBridgeOptionsFlow(config_entries.OptionsFlow):
+class SpicetifyBridgeOptionsFlow(config_entries.OptionsFlowWithReload):
     """Handle options flow for Spicetify Bridge."""
 
     async def async_step_init(

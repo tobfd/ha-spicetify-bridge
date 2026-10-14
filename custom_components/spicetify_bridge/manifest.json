@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/tobfd/ha-spicetify-bridge/issues",
   "loggers": ["spicetify"],
   "requirements": ["spicetify-websocket>=0.3.1,<0.4.0"],
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

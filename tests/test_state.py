@@ -133,3 +133,21 @@ async def test_no_volume_before_first_state(hass: HomeAssistant, hub) -> None:
     state = hass.states.get(MEDIA_PLAYER)
     assert state.state == MediaPlayerState.IDLE
     assert "volume_level" not in state.attributes
+
+
+async def test_mute_updates_state_optimistically(
+    hass: HomeAssistant, hub, mock_spotify_server: AsyncMock
+) -> None:
+    """The extension sends no mute event, so the entity updates right after the command."""
+    await _push(hass, hub, _state())
+    assert hass.states.get(MEDIA_PLAYER).attributes["is_volume_muted"] is False
+
+    await hass.services.async_call(
+        "media_player",
+        "volume_mute",
+        {"entity_id": MEDIA_PLAYER, "is_volume_muted": True},
+        blocking=True,
+    )
+
+    mock_spotify_server.set_mute.assert_called_once_with(True)
+    assert hass.states.get(MEDIA_PLAYER).attributes["is_volume_muted"] is True
