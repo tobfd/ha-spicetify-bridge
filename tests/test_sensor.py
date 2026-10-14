@@ -68,6 +68,7 @@ async def test_latency_sensor_reports_ping(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    mock_spotify_server.callbacks["on_connect"]()
     await mock_config_entry.runtime_data.async_ping_client()
     await hass.async_block_till_done()
 

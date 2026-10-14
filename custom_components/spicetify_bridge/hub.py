@@ -16,7 +16,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
-from spicetify import PlayerState, SpotifyServer
+from spicetify import SPOTIFY_DESKTOP_ORIGIN, PlayerState, SpotifyServer
 from spicetify.exceptions import (
     NotConnectedError,
     RequestTimeoutError,
@@ -32,11 +32,13 @@ from .const import (
     CONF_HOST,
     CONF_KEYFILE,
     CONF_PORT,
+    CONF_RESTRICT_ORIGIN,
     DEFAULT_CERTFILE,
     DEFAULT_ENABLE_SSL,
     DEFAULT_HOST,
     DEFAULT_KEYFILE,
     DEFAULT_PORT,
+    DEFAULT_RESTRICT_ORIGIN,
     DOMAIN,
     LOGGER,
     SIGNAL_SPICETIFY_CONNECTION_UPDATE,
@@ -46,7 +48,9 @@ from .const import (
 if TYPE_CHECKING:
     from . import SpicetifyBridgeConfigEntry
 
-HEARTBEAT_INTERVAL = timedelta(seconds=15)
+# Only used to refresh the latency sensor. Connection loss is detected by the
+# library (WebSocket keepalive) and reported through on_disconnect.
+LATENCY_INTERVAL = timedelta(seconds=60)
 
 _T = TypeVar("_T")
 
@@ -74,9 +78,12 @@ class SpicetifyBridgeHub:
         self.enable_ssl: bool = config_data.get(CONF_ENABLE_SSL, DEFAULT_ENABLE_SSL)
         self.certfile: str = config_data.get(CONF_CERTFILE, DEFAULT_CERTFILE)
         self.keyfile: str = config_data.get(CONF_KEYFILE, DEFAULT_KEYFILE)
+        self.restrict_origin: bool = config_data.get(
+            CONF_RESTRICT_ORIGIN, DEFAULT_RESTRICT_ORIGIN
+        )
 
         self._server: SpotifyServer | None = None
-        self._unsub_heartbeat: CALLBACK_TYPE | None = None
+        self._unsub_latency: CALLBACK_TYPE | None = None
 
         # State tracking for Home Assistant entities
         self.player_state: PlayerState | None = None
@@ -121,8 +128,6 @@ class SpicetifyBridgeHub:
         # Use the receive time, not the PC clock (state.timestamp): Home Assistant
         # requires utcnow() here, and the PC clock may drift from Home Assistant.
         self.position_updated_at = dt_util.utcnow()
-
-        self._set_connected(True)
         self._notify_state_update()
 
     def _register_event_handlers(self) -> None:
@@ -143,10 +148,17 @@ class SpicetifyBridgeHub:
         def handle_ping(ping_time: datetime) -> None:
             LOGGER.debug("Received Heartbeat Ping at: %s", ping_time)
             self.last_heartbeat = ping_time
+
+        @server.on_connect
+        def handle_connect() -> None:
             self._set_connected(True)
 
-    async def _async_heartbeat_check(self, _now: datetime) -> None:
-        """Periodically ping client to detect ungraceful disconnections."""
+        @server.on_disconnect
+        def handle_disconnect() -> None:
+            self._set_connected(False)
+
+    async def _async_latency_check(self, _now: datetime) -> None:
+        """Periodically refresh the latency sensor while connected."""
         if self.is_connected:
             await self.async_ping_client()
 
@@ -174,6 +186,9 @@ class SpicetifyBridgeHub:
             "port": self.port,
             "api_key": self.api_key,
         }
+        if self.restrict_origin:
+            # Reject browser pages from other sites (cross-site WebSocket hijacking).
+            server_kwargs["allowed_origins"] = [SPOTIFY_DESKTOP_ORIGIN]
 
         if self.enable_ssl:
             try:
@@ -209,17 +224,17 @@ class SpicetifyBridgeHub:
                 },
             ) from err
 
-        self._unsub_heartbeat = async_track_time_interval(
-            self.hass, self._async_heartbeat_check, HEARTBEAT_INTERVAL
+        self._unsub_latency = async_track_time_interval(
+            self.hass, self._async_latency_check, LATENCY_INTERVAL
         )
 
     async def async_stop(self) -> None:
         """Stop the WebSocket server asynchronously."""
         LOGGER.info("Stopping Spicetify Bridge WebSocket server instance")
 
-        if self._unsub_heartbeat is not None:
-            self._unsub_heartbeat()
-            self._unsub_heartbeat = None
+        if self._unsub_latency is not None:
+            self._unsub_latency()
+            self._unsub_latency = None
 
         if self._server is not None:
             await self._server.stop()
@@ -278,22 +293,23 @@ class SpicetifyBridgeHub:
             ) from err
 
     async def async_ping_client(self) -> float | None:
-        """Trigger a manual ping request to the Spicetify client."""
+        """Measure the round-trip latency to the Spicetify client.
+
+        The connection state is not changed here; it comes from the library's
+        connect/disconnect hooks.
+
+        Returns:
+            The latency in milliseconds, or ``None`` if the ping failed.
+        """
         if self._server is None:
             return None
         try:
-            latency = await self.server.ping()
+            latency = await self._server.ping()
         except (SpicetifyError, ConnectionClosed, OSError, TimeoutError) as err:
             LOGGER.debug("Ping request to Spicetify client failed: %s", err)
-            self._set_connected(False)
-            return None
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected error during ping request")
-            self._set_connected(False)
             return None
 
         self.last_ping_latency = latency
-        self._set_connected(True)
         # The latency sensor listens to connection updates.
         self._notify_connection_update()
         return latency

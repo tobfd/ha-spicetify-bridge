@@ -19,11 +19,13 @@ from .const import (
     CONF_HOST,
     CONF_KEYFILE,
     CONF_PORT,
+    CONF_RESTRICT_ORIGIN,
     DEFAULT_CERTFILE,
     DEFAULT_ENABLE_SSL,
     DEFAULT_HOST,
     DEFAULT_KEYFILE,
     DEFAULT_PORT,
+    DEFAULT_RESTRICT_ORIGIN,
     DOMAIN,
 )
 
@@ -198,6 +200,12 @@ class SpicetifyBridgeOptionsFlow(config_entries.OptionsFlowWithReload):
                     CONF_KEYFILE,
                     default=current_data.get(CONF_KEYFILE, DEFAULT_KEYFILE),
                 ): str,
+                vol.Required(
+                    CONF_RESTRICT_ORIGIN,
+                    default=current_data.get(
+                        CONF_RESTRICT_ORIGIN, DEFAULT_RESTRICT_ORIGIN
+                    ),
+                ): cv.boolean,
             }
         )
 

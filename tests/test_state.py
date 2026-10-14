@@ -43,6 +43,8 @@ async def hub(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    mock_spotify_server.callbacks["on_connect"]()
+    await hass.async_block_till_done()
     return mock_config_entry.runtime_data
 
 
@@ -126,10 +128,6 @@ async def test_media_content_id_is_track_uri(hass: HomeAssistant, hub) -> None:
 
 async def test_no_volume_before_first_state(hass: HomeAssistant, hub) -> None:
     """Before any state arrives, no made-up volume of 100 % is reported."""
-    hub.is_connected = True
-    hub._notify_connection_update()
-    await hass.async_block_till_done()
-
     state = hass.states.get(MEDIA_PLAYER)
     assert state.state == MediaPlayerState.IDLE
     assert "volume_level" not in state.attributes
