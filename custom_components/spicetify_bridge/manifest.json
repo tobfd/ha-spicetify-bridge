@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/tobfd/ha-spicetify-bridge/issues",
   "loggers": ["spicetify"],
-  "requirements": ["spicetify-websocket>=0.3.2,<0.4.0"],
+  "requirements": ["spicetify-websocket>=0.4.0,<0.5.0"],
   "version": "0.2.0"
 }

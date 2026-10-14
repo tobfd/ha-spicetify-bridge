@@ -1,4 +1,4 @@
-spicetify-websocket>=0.3.2,<0.4.0
+spicetify-websocket>=0.4.0,<0.5.0
 # Pins Home Assistant 2026.10.0 (requires Python 3.14). Bump together with the HA version.
 pytest-homeassistant-custom-component==0.13.371
 pytest-cov
